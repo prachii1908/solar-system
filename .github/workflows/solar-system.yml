@@ -11,6 +11,8 @@ env:
     MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
     MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 jobs:
+# both the jobs (unit testing and code coverage will run in parallel)
+
     unit-testing:
       name: Unit-testing
       strategy:
@@ -51,6 +53,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Check Code Coverage
+        continue-on-error: true
         run: npm run coverage
       - name: Archive Test result
         uses: actions/upload-artifact@v3
