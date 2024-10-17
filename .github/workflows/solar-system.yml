@@ -128,8 +128,8 @@ jobs:
       #   # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
       #     context: .
       #     push: true
-      #     tags: ${{ vars.USERNAME }}/solar-system:${{ github.sha }}
-      - name: Container Registry push
+            # tags: prachii1908/solar-system:
+      - name: GithubContainer Registry push
         uses: docker/build-push-action@v4
         with:
       # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
