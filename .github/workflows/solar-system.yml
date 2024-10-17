@@ -122,14 +122,8 @@ jobs:
           echo $IP
           echo Testing image URL using wget
           wget -q -O - 127.0.0.1:3000/live | grep live
-      # - name: Docker push
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #   # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
-      #     context: .
-      #     push: true
-            # tags: prachii1908/solar-system:
-      - name: GithubContainer Registry push
+
+      - name: Github Container Registry push
         uses: docker/build-push-action@v4
         with:
       # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
