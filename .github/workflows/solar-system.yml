@@ -93,6 +93,13 @@ jobs:
         with:
           username: ${{ vars.USERNAME }}
           password: ${{ secrets.PASSWORD }}
+
+      - name: GHCR Login
+        uses: docker/login-action@v2.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}  ## our repository owner name is default git variable
+          password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Docker build for testing
         uses: docker/build-push-action@v4
@@ -115,10 +122,19 @@ jobs:
           echo $IP
           echo Testing image URL using wget
           wget -q -O - 127.0.0.1:3000/live | grep live
-      - name: Docker push
+      # - name: Docker push
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #   # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
+      #     context: .
+      #     push: true
+      #     tags: ${{ vars.USERNAME }}/solar-system:${{ github.sha }}
+      - name: Container Registry push
         uses: docker/build-push-action@v4
         with:
-        # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
+      # context is the path where your Dockerfile exist (if it is in the root then give fullstop)
           context: .
           push: true
-          tags: ${{ vars.USERNAME }}/solar-system:${{ github.sha }}
+          tags: |
+            {{ vars.USERNAME }}/solar-system:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
