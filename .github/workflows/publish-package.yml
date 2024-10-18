@@ -1,5 +1,6 @@
 name: Publish Package to github NPM registry
 on: 
+  workflow_dispatch:
   release:
     types: [published, edited] 
 jobs:
