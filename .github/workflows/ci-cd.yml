@@ -185,9 +185,20 @@ jobs:
           run: |
               cat kubernetes/development/*.yaml
         
-        - name: Create dev namespace
+        - name: Check if namespace exists
+          id: check_namespace
           run: |
-              kubectl create ns dev
+              kubectl get namespace dev >/dev/null 2>&1 && echo "exists=true" || echo "exists=false"
+          shell: bash
+            
+        - name: Create namespace if it does not exist
+          if: ${{ steps.check_namespace.outputs.exists == 'false' }}
+          run: |
+              kubectl create namespace dev
+
+        # - name: Create dev namespace
+        #   run: |
+        #       kubectl create ns dev
 
         - name: Create mongodb secrets
           run: |
