@@ -137,6 +137,10 @@ jobs:
   
     dev-deploy:
       needs: docker
+      # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
+      environment: 
+        name: development
+        url: https://${{ steps.lb-ip.outputs.LB_IP }}
       outputs:
         APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
         LB_IP: ${{ steps.lb-ip.outputs.LB_IP }}
