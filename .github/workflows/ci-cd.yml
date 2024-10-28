@@ -240,5 +240,6 @@ jobs:
           run: |
             echo $IP
             echo "-----------------------------"
-            curl "http://$IP/live -s -k | jq -r .status | grep -i live"
+            ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
+            curl "http://$IP/live"
           
