@@ -248,7 +248,8 @@ jobs:
 
 #### below section is for prod environment
     prod-deploy:
-      needs: dev-integration-testing
+      needs: docker
+      if: github.ref == 'refs/heads/main'
       # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
       environment: 
         name: prod
@@ -345,6 +346,7 @@ jobs:
             
     prod-integration-testing:
       name: Prod Intergation Testing
+      if: github.ref == 'refs/heads/main'
       runs-on: ubuntu-latest
       needs: prod-deploy
       steps:
