@@ -246,7 +246,7 @@ jobs:
             ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
             ## curl "http://$IP/live"
 
-## below section is for prod environment
+#### below section is for prod environment
     prod-deploy:
       needs: dev-integration-testing
       # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
