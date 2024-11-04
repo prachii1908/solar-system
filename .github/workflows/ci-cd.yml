@@ -289,8 +289,8 @@ jobs:
         - name: Replace tokens in manifest files
           uses: cschleiden/replace-tokens@v1
           with:
-              tokenPrefix: '_{_'
-              tokenSuffix: '_}_'
+              tokenPrefix: '${'
+              tokenSuffix: '}'
               files: '["kubernetes/production/*yaml"]'
           env:
               NAMESPACE: ${{ vars.NAMESPACE }}
