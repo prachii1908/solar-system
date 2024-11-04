@@ -231,8 +231,7 @@ jobs:
           run: |
             echo "LB_IP=$(kubectl get svc -n dev -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")" >> "$GITHUB_OUTPUT"
             
-
-    integration-testing:
+    dev-integration-testing:
       name: Dev Intergation Testing
       runs-on: ubuntu-latest
       needs: dev-deploy
@@ -241,6 +240,118 @@ jobs:
           env:
             URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
             IP: ${{ needs.dev-deploy.outputs.LB_IP }}
+          run: |
+            echo $IP
+            echo "-----------------------------"
+            ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
+            ## curl "http://$IP/live"
+
+## below section is for prod environment
+    prod-deploy:
+      needs: dev-integration-testing
+      # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
+      environment: 
+        name: prod
+        url: https://${{ steps.lb-ip.outputs.LB_IP }}
+      outputs:
+        APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+        LB_IP: ${{ steps.lb-ip.outputs.LB_IP }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Install kubectl CLI
+          uses: azure/setup-kubectl@v3
+          with:
+            version: 'v1.26.0'
+
+        - uses: azure/login@v2
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+        - uses: azure/aks-set-context@v4
+          with:
+            resource-group: 'prachi-rg'
+            cluster-name: 'praaks'    
+
+        - name: Fetch Kubernetes cluster details
+          run: |
+            kubectl version --short
+            echo --------------------------
+            kubectl get nodes
+            
+        - name: Saving nginx ingress controller IP as an environment variable
+          run: |
+              echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath=”{.status/loadBalancer.ingress[0].ip}”)" >> $GITHUB_ENV
+
+        - name: Replace tokens in manifest files
+          uses: cschleiden/replace-tokens@v1
+          with:
+              tokenPrefix: '_{_'
+              tokenSuffix: '_}_'
+              files: '["kubernetes/production/*yaml"]'
+          env:
+              NAMESPACE: ${{ vars.NAMESPACE }}
+              REPLICAS: ${{ vars.REPLICAS }}
+              IMAGE: ${{ vars.USERNAME }}/solar-system:${{ github.sha }}
+              INGRESS_IP: ${{ env.INGRESS_IP }}
+        
+        - name: Check files
+          run: |
+              cat kubernetes/production/*.yaml
+        
+        - name: Check if namespace exists
+          id: check_namespace
+          run: |
+              kubectl get namespace prod >/dev/null 2>&1 && echo "exists=true" || echo "exists=false"
+          shell: bash
+            
+        - name: Create namespace if it does not exist
+          if: ${{ steps.check_namespace.outputs.exists == 'false' }}
+          run: |
+              kubectl create namespace prod
+
+        # - name: Create dev namespace
+        #   run: |
+        #       kubectl create ns dev
+
+        - name: Create mongodb secrets
+          run: |
+              kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+              --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+              --from-literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+              --from-literal=MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+              --save-config \
+              --dry-run=client \
+              -o yaml | kubectl apply -f -
+
+        - name: Deploy to prod env
+          run: |
+              kubectl apply -f kubernetes/production/deployment.yaml
+              kubectl apply -f kubernetes/production/service.yaml
+        
+      ## Below step is to fetch the hostname of our ingress
+        # - name: Set application ingress host URL
+        #   id: set-ingress-host-address
+        #   run: |
+        #     echo "APP_INGRESS_HOST=$(kubectl -n dev get ingress -o jsonpath="{.item[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
+
+      ## As we are not using ingress in our current setup so we will fetch the publicIP of LoadBalancer
+        - name: Fetch the Load balancer service IP
+          id: lb-ip
+          run: |
+            echo "LB_IP=$(kubectl get svc -n prod -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")" >> "$GITHUB_OUTPUT"
+            
+    prod-integration-testing:
+      name: Prod Intergation Testing
+      runs-on: ubuntu-latest
+      needs: prod-deploy
+      steps:
+        - name: Test URL output using curl and jq
+          env:
+            URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_URL }}
+            IP: ${{ needs.prod-deploy.outputs.LB_IP }}
           run: |
             echo $IP
             echo "-----------------------------"
