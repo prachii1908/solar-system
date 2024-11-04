@@ -301,18 +301,19 @@ jobs:
         - name: Check files
           run: |
               cat kubernetes/staging/*.yaml
-        
-        - name: Check if namespace exists
-          id: check_namespace
-          run: |
-              kubectl get namespace prod >/dev/null 2>&1 && echo "exists=true" || echo "exists=false"
-          shell: bash
-            
-        - name: Create namespace if it does not exist
-          if: ${{ steps.check_namespace.outputs.exists == 'false' }}
-          run: |
-              kubectl create namespace prod
 
+        - name: Check if Namespace Exists and Create if Not
+          env:
+            NAMESPACE: ${{ secrets.NAMESPACE }}
+          run: |
+            if ! kubectl get namespace "$NAMESPACE"; then
+              echo "Namespace $NAMESPACE does not exist. Creating namespace."
+              kubectl create namespace "$NAMESPACE"
+            else
+              echo "Namespace $NAMESPACE already exists. Skipping creation."
+            fi
+
+            
         # - name: Create dev namespace
         #   run: |
         #       kubectl create ns dev
