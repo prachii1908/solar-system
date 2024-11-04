@@ -300,7 +300,7 @@ jobs:
         
         - name: Check files
           run: |
-              cat kubernetes/production/*.yaml
+              cat kubernetes/staging/*.yaml
         
         - name: Check if namespace exists
           id: check_namespace
@@ -329,8 +329,8 @@ jobs:
 
         - name: Deploy to prod env
           run: |
-              kubectl apply -f kubernetes/production/deployment.yaml
-              kubectl apply -f kubernetes/production/service.yaml
+              kubectl apply -f kubernetes/staging/deployment.yaml
+              kubectl apply -f kubernetes/staging/service.yaml
         
       ## Below step is to fetch the hostname of our ingress
         # - name: Set application ingress host URL
