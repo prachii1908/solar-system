@@ -304,7 +304,7 @@ jobs:
 
         - name: Check if Namespace Exists and Create if Not
           env:
-            NAMESPACE: ${{ secrets.NAMESPACE }}
+            NAMESPACE: ${{ vars.NAMESPACE }}
           run: |
             if ! kubectl get namespace "$NAMESPACE"; then
               echo "Namespace $NAMESPACE does not exist. Creating namespace."
@@ -313,7 +313,7 @@ jobs:
               echo "Namespace $NAMESPACE already exists. Skipping creation."
             fi
 
-            
+
         # - name: Create dev namespace
         #   run: |
         #       kubectl create ns dev
