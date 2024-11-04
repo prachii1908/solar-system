@@ -11,7 +11,7 @@ env:
     MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
     MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 jobs:
-# both the jobs (unit testing and code coverage will run in parallel)
+## both the jobs (unit testing and code coverage will run in parallel)
 
     unit-testing:
       name: Unit-testing
