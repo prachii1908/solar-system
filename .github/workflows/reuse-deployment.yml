@@ -4,4 +4,92 @@ on:
 
 jobs:
     reuse-deploy:
+    # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
+      environment: 
+        name: development
+        url: https://${{ steps.lb-ip.outputs.LB_IP }}
+      outputs:
+        APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+        LB_IP: ${{ steps.lb-ip.outputs.LB_IP }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Install kubectl CLI
+          uses: azure/setup-kubectl@v3
+          with:
+            version: 'v1.26.0'
+
+        - uses: azure/login@v2
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+        - uses: azure/aks-set-context@v4
+          with:
+            resource-group: 'prachi-rg'
+            cluster-name: 'praaks'    
+
+        - name: Fetch Kubernetes cluster details
+          run: |
+            kubectl version --short
+            echo --------------------------
+            kubectl get nodes
+            
+        - name: Saving nginx ingress controller IP as an environment variable
+          run: |
+              echo "INGRESS_IP=$(kubectl -n ingress-nginx get services ingress-nginx-controller -o jsonpath=”{.status/loadBalancer.ingress[0].ip}”)" >> $GITHUB_ENV
+
+        - name: Replace tokens in manifest files
+          uses: cschleiden/replace-tokens@v1
+          with:
+              tokenPrefix: '_{_'
+              tokenSuffix: '_}_'
+              files: '["kubernetes/development/*yaml"]'
+          env:
+              NAMESPACE: ${{ vars.NAMESPACE }}
+              REPLICAS: ${{ vars.REPLICAS }}
+              IMAGE: ${{ vars.USERNAME }}/solar-system:${{ github.sha }}
+              INGRESS_IP: ${{ env.INGRESS_IP }}
         
+        - name: Check files
+          run: |
+              cat kubernetes/development/*.yaml
+        
+        - name: Check if Namespace Exists and Create if Not
+          env:
+            NAMESPACE: ${{ vars.NAMESPACE }}
+          run: |
+                if ! kubectl get namespace "$NAMESPACE"; then
+                  echo "Namespace $NAMESPACE does not exist. Creating namespace."
+                  kubectl create namespace "$NAMESPACE"
+                else
+                  echo "Namespace $NAMESPACE already exists. Skipping creation."
+                fi
+
+        - name: Create mongodb secrets
+          run: |
+              kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+              --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+              --from-literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+              --from-literal=MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+              --save-config \
+              --dry-run=client \
+              -o yaml | kubectl apply -f -
+
+        - name: Deploy to dev env
+          run: |
+              kubectl apply -f kubernetes/development/deployment.yaml
+              kubectl apply -f kubernetes/development/service.yaml
+        
+      ## Below step is to fetch the hostname of our ingress
+        # - name: Set application ingress host URL
+        #   id: set-ingress-host-address
+        #   run: |
+        #     echo "APP_INGRESS_HOST=$(kubectl -n dev get ingress -o jsonpath="{.item[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
+
+      ## As we are not using ingress in our current setup so we will fetch the publicIP of LoadBalancer
+        - name: Fetch the Load balancer service IP
+          id: lb-ip
+          run: |
+            echo "LB_IP=$(kubectl get svc -n dev -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")" >> "$GITHUB_OUTPUT"
