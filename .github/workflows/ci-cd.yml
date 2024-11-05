@@ -162,6 +162,8 @@ jobs:
       needs: docker
       if: github.ref == 'refs/heads/main'
       uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        az-creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     prod-integration-testing:
       name: Prod Intergation Testing
