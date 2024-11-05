@@ -103,8 +103,9 @@ jobs:
 
         - name: Deploy to dev env
           run: |
-              kubectl apply -f ${{ inputs.k8s-manifest-dir }}
-              
+              kubectl apply -f ${{ inputs.k8s-manifest-dir }}/deployment.yaml
+              kubectl apply -f ${{ inputs.k8s-manifest-dir }}/service.yaml
+
       ## Below step is to fetch the hostname of our ingress
         # - name: Set application ingress host URL
         #   id: set-ingress-host-address
