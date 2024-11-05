@@ -155,7 +155,7 @@ jobs:
             echo $IP
             echo "-----------------------------"
             ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
-            ## curl "http://$IP/live"
+            curl "http://$IP:3000/live -s -k | jq -r .status | grep -i live"
 
 #### below section is for prod environment
     prod-deploy:
@@ -179,5 +179,5 @@ jobs:
             echo $IP
             echo "-----------------------------"
             ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
-            ## curl "http://$IP/live"
+            curl "http://$IP:3000/live -s -k | jq -r .status | grep -i live"
           
