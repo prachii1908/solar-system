@@ -1,7 +1,10 @@
 name: Deployment - Reusable Workflow
 on:
     workflow_call:
-
+        secrets:
+            az-creds:
+                required: true
+                
 jobs:
     reuse-deploy:
     # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
@@ -23,7 +26,7 @@ jobs:
 
         - uses: azure/login@v2
           with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            creds: ${{ secrets.az-creds }}
 
         - uses: azure/aks-set-context@v4
           with:

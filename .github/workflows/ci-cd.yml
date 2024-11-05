@@ -139,6 +139,8 @@ jobs:
       needs: docker
       if: contains(github.ref, 'feature/')
       uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        az-creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     dev-integration-testing:
       name: Dev Intergation Testing
