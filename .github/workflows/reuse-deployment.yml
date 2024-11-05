@@ -4,12 +4,33 @@ on:
         secrets:
             az-creds:
                 required: true
-                
+            mongodb-password:
+                required: true
+        inputs:
+            mongodb-uri:
+                required: true
+                type: string
+            kubectl-version:
+                required: false
+                description: Provide the reuired kubectl version
+                type: string
+                default: v1.27.0
+            k8s-manifest-dir:
+                required: true
+                default: Directory containing manifest files
+                type: string
+                description: kubernetes/ 
+            environment:
+                required: true
+                default: dev
+                type: string
+                description: Provide the deployment environment 
+
 jobs:
     reuse-deploy:
     # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
       environment: 
-        name: development
+        name: ${{ inputs.environment }}
         url: https://${{ steps.lb-ip.outputs.LB_IP }}
       outputs:
         APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
@@ -22,7 +43,7 @@ jobs:
         - name: Install kubectl CLI
           uses: azure/setup-kubectl@v3
           with:
-            version: 'v1.26.0'
+            version: '${{ inputs.kubectl-version }}'
 
         - uses: azure/login@v2
           with:
@@ -48,7 +69,7 @@ jobs:
           with:
               tokenPrefix: '_{_'
               tokenSuffix: '_}_'
-              files: '["kubernetes/development/*yaml"]'
+              files: '["${{ inputs.k8s-manifest-dir }}*yaml"]'
           env:
               NAMESPACE: ${{ vars.NAMESPACE }}
               REPLICAS: ${{ vars.REPLICAS }}
@@ -57,7 +78,7 @@ jobs:
         
         - name: Check files
           run: |
-              cat kubernetes/development/*.yaml
+              cat ${{ inputs.k8s-manifest-dir }}*.yaml
         
         - name: Check if Namespace Exists and Create if Not
           env:
@@ -73,18 +94,17 @@ jobs:
         - name: Create mongodb secrets
           run: |
               kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-              --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
-              --from-literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
-              --from-literal=MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+              --from-literal=MONGO_URI=${{ inputs.mongodb-uri }} \
+              --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
+              --from-literal=MONGO_PASSWORD=${{ secrets.mongodb-password }} \
               --save-config \
               --dry-run=client \
               -o yaml | kubectl apply -f -
 
         - name: Deploy to dev env
           run: |
-              kubectl apply -f kubernetes/development/deployment.yaml
-              kubectl apply -f kubernetes/development/service.yaml
-        
+              kubectl apply -f ${{ inputs.k8s-manifest-dir }}
+              
       ## Below step is to fetch the hostname of our ingress
         # - name: Set application ingress host URL
         #   id: set-ingress-host-address
