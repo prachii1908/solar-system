@@ -138,7 +138,7 @@ jobs:
     dev-deploy:
       needs: docker
       if: contains(github.ref, 'feature/')
-      uses: .github/workflows/reuse-deployment.yml
+      uses: ./.github/workflows/reuse-deployment.yml
 
     dev-integration-testing:
       name: Dev Intergation Testing
@@ -159,7 +159,7 @@ jobs:
     prod-deploy:
       needs: docker
       if: github.ref == 'refs/heads/main'
-      uses: .github/workflows/reuse-deployment.yml
+      uses: ./.github/workflows/reuse-deployment.yml
 
     prod-integration-testing:
       name: Prod Intergation Testing
