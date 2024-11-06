@@ -160,7 +160,7 @@ jobs:
           run: |
             echo $IP
             echo "-----------------------------"
-            curl "http://$IP:3000/live -s -k | jq -r .status | grep -i live"
+            curl http://$IP:3000/live -s -k | jq -r .status | grep -i live
           ## curl "http://$URL/live -s -k | jq -r .status | grep -i live"
 
 #### below section is for prod environment
@@ -189,6 +189,6 @@ jobs:
           run: |
             echo $IP
             echo "-----------------------------"
-            curl "http://$IP:3000/live -s -k | jq -r .status | grep -i live"
+            curl http://$IP:3000/live -s -k | jq -r .status | grep -i live
           #curl "http://$URL/live -s -k | jq -r .status | grep -i live"
           
