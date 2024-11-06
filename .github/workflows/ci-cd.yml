@@ -155,8 +155,8 @@ jobs:
       steps:
         - name: Test URL output using curl and jq
           env:
-            URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
-            IP: ${{ needs.dev-deploy.outputs.LB_IP }}
+            URL: ${{ needs.dev-deploy.outputs.app-url }}
+            IP: ${{ needs.dev-deploy.outputs.app-ip }}
           run: |
             echo $IP
             echo "-----------------------------"
@@ -184,8 +184,8 @@ jobs:
       steps:
         - name: Test URL output using curl and jq
           env:
-            URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_URL }}
-            IP: ${{ needs.prod-deploy.outputs.LB_IP }}
+            URL: ${{ needs.prod-deploy.outputs.app-url }}
+            IP: ${{ needs.prod-deploy.outputs.app-ip }}
           run: |
             echo $IP
             echo "-----------------------------"

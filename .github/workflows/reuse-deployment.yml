@@ -25,7 +25,11 @@ on:
                 default: dev
                 type: string
                 description: Provide the deployment environment 
-
+        outputs:
+          app-url:
+            value: ${{ jobs.reuse-delpoy.outputs.APP_INGRESS_URL }}
+          app-ip:
+            value: ${{ jobs.reuse-deploy.outputs.LB_IP }}
 jobs:
     reuse-deploy:
     # env is to set variables which can be used in a job whereas environment is the workspace (with rules and policies) we created
