@@ -1,0 +1,19 @@
+name: 'NPM Custom Action'
+description: 'Installing and Caching NPM packages'
+inputs:
+  path-of-folder:  # id of input
+    description: 'the path to cache'
+    required: true
+    default: 'World'
+runs:
+  using: "composite"
+  steps:
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with: 
+          path: ${{ inputs.path-of-folder }}
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm install
+        shell: 
